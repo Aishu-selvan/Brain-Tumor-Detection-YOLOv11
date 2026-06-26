@@ -3,7 +3,6 @@ from ultralytics import YOLO
 from PIL import Image
 import tempfile
 import cv2
-import os
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(
@@ -24,7 +23,7 @@ with st.sidebar:
     st.subheader("Model")
     st.success("YOLOv11")
 
-    st.subheader("Supported Tumors")
+    st.subheader("Supported Tumor Types")
     st.write("• Glioma")
     st.write("• Meningioma")
     st.write("• Pituitary")
@@ -35,8 +34,8 @@ with st.sidebar:
     st.write(
         """
         This application detects and localizes
-        brain tumors from MRI scans using
-        a trained YOLOv11 model.
+        brain tumors from MRI scans using a
+        YOLOv11 object detection model.
         """
     )
 
@@ -44,7 +43,7 @@ with st.sidebar:
 st.title("🧠 Brain Tumor Detection using YOLOv11")
 
 st.write(
-    "Upload an MRI scan to detect and localize brain tumors using Deep Learning."
+    "Upload an MRI brain scan to detect and localize Glioma, Meningioma, or Pituitary tumors."
 )
 
 uploaded_file = st.file_uploader(
@@ -67,16 +66,15 @@ if uploaded_file is not None:
 
         results = model.predict(
             temp_path,
-            conf=0.25
+            conf=0.70
         )
 
     result = results[0]
 
     plotted = result.plot()
-
     plotted = cv2.cvtColor(plotted, cv2.COLOR_BGR2RGB)
 
-    # ---------------- SIDE BY SIDE ----------------
+    # ---------------- SHOW IMAGES ----------------
 
     col1, col2 = st.columns(2)
 
@@ -88,55 +86,79 @@ if uploaded_file is not None:
         st.subheader("Detection Result")
         st.image(plotted, use_container_width=True)
 
-    # ---------------- PREDICTION CARD ----------------
-
     st.markdown("---")
 
-    if len(result.boxes) > 0:
+    # ---------------- DETECTION SUMMARY ----------------
 
-        box = result.boxes[0]
+    if len(result.boxes) == 0:
 
-        cls = int(box.cls[0])
+        st.success("✅ No confident tumor detection")
 
-        confidence = float(box.conf[0])
+        st.info(
+            """
+The model did not detect **Glioma, Meningioma, or Pituitary tumor**
+with sufficient confidence.
 
-        tumor = model.names[cls]
+**Important:**
 
-        st.subheader("📋 Detection Summary")
+This model was trained only on three tumor classes.
 
-        c1, c2, c3 = st.columns(3)
-
-        c1.metric(
-            "Tumor Type",
-            tumor.capitalize()
+It was **not trained on normal MRI scans**, therefore the absence of
+a detection should **not** be interpreted as a medical diagnosis.
+"""
         )
-
-        c2.metric(
-            "Confidence",
-            f"{confidence*100:.2f}%"
-        )
-
-        c3.metric(
-            "Objects Detected",
-            len(result.boxes)
-        )
-
-        st.write("### Confidence")
-
-        st.progress(confidence)
-
-        if confidence > 0.90:
-            st.success("🟢 High Confidence Detection")
-
-        elif confidence > 0.75:
-            st.warning("🟡 Medium Confidence Detection")
-
-        else:
-            st.error("🔴 Low Confidence Detection")
 
     else:
 
-        st.success("✅ No Tumor Detected")
+        box = result.boxes[0]
+
+        confidence = float(box.conf[0])
+
+        if confidence < 0.70:
+
+            st.warning("⚠️ Low-confidence prediction")
+
+            st.info(
+                """
+The model produced a low-confidence prediction.
+
+To reduce false positives, predictions below **70% confidence**
+are not considered reliable.
+"""
+            )
+
+        else:
+
+            cls = int(box.cls[0])
+            tumor = model.names[cls]
+
+            st.subheader("📋 Detection Summary")
+
+            c1, c2, c3 = st.columns(3)
+
+            c1.metric(
+                "Tumor Type",
+                tumor.capitalize()
+            )
+
+            c2.metric(
+                "Confidence",
+                f"{confidence*100:.2f}%"
+            )
+
+            c3.metric(
+                "Objects Detected",
+                len(result.boxes)
+            )
+
+            st.write("### Confidence Score")
+
+            st.progress(confidence)
+
+            if confidence >= 0.85:
+                st.success("🟢 High Confidence Detection")
+            else:
+                st.warning("🟡 Moderate Confidence Detection")
 
     # ---------------- DOWNLOAD ----------------
 
@@ -161,17 +183,30 @@ if uploaded_file is not None:
 st.markdown("---")
 
 st.markdown(
-    """
-### 📊 Model Information
+"""
+## 📊 Model Information
 
 - **Model:** YOLOv11
+- **Framework:** Ultralytics
 - **Input Size:** 640 × 640
-- **Framework:** Ultralytics YOLO
-- **Classes:** Glioma, Meningioma, Pituitary
+- **Supported Classes:** Glioma, Meningioma, Pituitary
 - **Deployment:** Streamlit
-
----
-
-Developed by **Aiswarya T**
 """
 )
+
+st.warning(
+"""
+⚠️ **Disclaimer**
+
+This application is developed for **educational and portfolio purposes only**.
+
+The model detects only **Glioma**, **Meningioma**, and **Pituitary** tumors.
+
+It **was not trained on normal MRI scans**, so the absence of a detection
+does **not** confirm that an MRI is normal. The application should not be
+used as a substitute for professional medical diagnosis.
+"""
+)
+
+st.markdown("---")
+st.caption("Developed by **Aiswarya T**")
