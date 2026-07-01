@@ -44,9 +44,7 @@ A deep learning-based web application that detects and localizes brain tumors fr
 
 ---
 
-## 📷 Application Preview
-
-## Demo
+##  Application Preview
 
 ### Original MRI vs Detection Result
 
@@ -58,7 +56,6 @@ A deep learning-based web application that detects and localizes brain tumors fr
 
 ---
 
----
 
 ## 🛠️ Tech Stack
 
