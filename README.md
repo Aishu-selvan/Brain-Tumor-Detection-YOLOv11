@@ -6,7 +6,7 @@ A deep learning-based web application that detects and localizes brain tumors fr
 
 ## 🚀 Live Demo
 
-🔗 https://your-streamlit-app-url.streamlit.app
+👉 **Try the Web App:** https://brain-tumor-detection-yolov11-oxh49nnbjnlqxj9jpm7sjg.streamlit.app/
 
 ---
 
